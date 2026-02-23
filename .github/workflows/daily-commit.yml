@@ -2,8 +2,8 @@ name: Daily Commit by 22f3001114@ds.study.iitm.ac.in
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # Runs daily at 10 PM UTC (pick any specific time, e.g., 22:00)
-  workflow_dispatch:      # Lets you trigger manually for testing
+    - cron: '0 22 * * *'  # Daily at 22:00 UTC
+  workflow_dispatch:
 
 jobs:
   update:
@@ -13,12 +13,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # Full history for safety
 
       - name: Update timestamp by 22f3001114@ds.study.iitm.ac.in
         run: |
-          echo "Last updated: $(date -u)" > update.log
+          # Create/overwrite file with unique timestamp
+          echo "# Daily Update Log" > README.md
+          echo "- Last run: $(date -u)" >> README.md
+          echo "- Commit: ${{ github.sha }}" >> README.md
+          
           git config user.name "DevSync Bot"
           git config user.email "22f3001114@ds.study.iitm.ac.in"
-          git add update.log
-          git commit -m "Daily automated update [$(date +%Y-%m-%d)]" || echo "No changes"
-          git push
+          
+          git add README.md
+          git diff --staged --exit-code || git commit -m "Daily automated update [$(date +%Y-%m-%d %H:%M UTC)]"
+          git push origin HEAD:${{ github.ref_name }}
+        shell: bash
